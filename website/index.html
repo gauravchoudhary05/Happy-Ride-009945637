@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Ride Aggregator — Premium</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<div id="app">
+
+  <!-- Map Area (Full Bleed Background) -->
+  <main class="map-area">
+    <div id="main-map"></div>
+    <div class="my-location-fab" id="btn-my-location"><span class="material-icons">my_location</span></div>
+  </main>
+
+  <!-- Floating Premium Panel -->
+  <aside class="floating-panel">
+    <header class="panel-header">
+      <div class="brand-logo">
+        <img src="logos/Ride Aggregator.jpeg" alt="Ride Aggregator">
+      </div>
+      <h1 class="brand-title">Ride Aggregator</h1>
+    </header>
+
+    <div class="panel-content" id="sidebar-content">
+
+      <!-- ==============================================
+           FLOW SECTION: SEARCH
+           ============================================== -->
+      <section id="section-search" class="flow-section active">
+        
+        <div class="premium-input-card">
+          <div class="route-indicator">
+            <div class="route-dot pickup"></div>
+            <div class="route-dotted-line"></div>
+            <div class="route-dot drop"></div>
+          </div>
+          <div class="location-fields">
+            <div class="location-input-wrap">
+              <input type="text" class="location-input" id="pickup-input" placeholder="Enter pickup location" autocomplete="off">
+              <div class="location-input-clear" id="pickup-clear"><span class="material-icons">close</span></div>
+            </div>
+            <div class="field-divider"></div>
+            <div class="location-input-wrap">
+              <input type="text" class="location-input" id="dropoff-input" placeholder="Where to?" autocomplete="off">
+              <div class="location-input-clear" id="dropoff-clear"><span class="material-icons">close</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="vehicle-selector">
+          <div class="vehicle-btn" data-vehicle="bike">
+            <div class="vehicle-icon-wrap"><span class="material-icons">two_wheeler</span></div>
+            <span>Bike</span>
+          </div>
+          <div class="vehicle-btn" data-vehicle="auto">
+            <div class="vehicle-icon-wrap"><span class="material-icons">electric_rickshaw</span></div>
+            <span>Auto</span>
+          </div>
+          <div class="vehicle-btn active" data-vehicle="cab">
+            <div class="vehicle-icon-wrap"><span class="material-icons">local_taxi</span></div>
+            <span>Cab</span>
+          </div>
+        </div>
+
+        <button class="btn-primary" id="btn-search-rides" style="display:none; margin-top: 16px;">Find Rides</button>
+
+        <div class="search-results" id="search-results"></div>
+      </section>
+
+      <!-- ==============================================
+           FLOW SECTION: RESULTS
+           ============================================== -->
+      <section id="section-results" class="flow-section">
+        <div class="back-btn-row">
+          <button class="btn-icon" id="btn-back-to-search"><span class="material-icons">arrow_back</span></button>
+          <div class="results-route-summary" id="results-route-summary"></div>
+        </div>
+
+        <div class="filter-tabs" id="filter-tabs">
+          <div class="filter-tab active" data-filter="all">All</div>
+          <div class="filter-tab" data-filter="bike">Bike</div>
+          <div class="filter-tab" data-filter="auto">Auto</div>
+          <div class="filter-tab" data-filter="cab">Cab</div>
+        </div>
+
+        <div id="results-loading" class="results-loading">
+          <div class="spinner"></div>
+          <div>Searching across ONDC network...</div>
+        </div>
+
+        <div class="scrollable-rides">
+          <div id="ride-list" style="display: none;"></div>
+        </div>
+      </section>
+
+      <!-- ==============================================
+           FLOW SECTION: STATUS
+           ============================================== -->
+      <section id="section-status" class="flow-section">
+        <div class="status-header">
+          <div class="status-badge">Arriving in <span id="status-eta-text">5 min</span></div>
+        </div>
+
+        <div class="status-confirmed">
+          <div class="status-check-circle"><span class="material-icons">check</span></div>
+          <h2>Ride Confirmed</h2>
+          <p id="status-platform-name"></p>
+        </div>
+
+        <div class="otp-section">
+          <div class="otp-label">YOUR OTP</div>
+          <div class="otp-digits" id="otp-digits"></div>
+        </div>
+
+        <div class="driver-card">
+          <div class="driver-avatar"><span class="material-icons">person</span></div>
+          <div class="driver-info">
+            <div class="driver-name" id="driver-name"></div>
+            <div class="driver-vehicle" id="driver-vehicle"></div>
+          </div>
+          <button class="btn-call-driver"><span class="material-icons">phone</span></button>
+        </div>
+
+        <div class="status-price" id="status-price"></div>
+
+        <button class="btn-secondary danger" id="btn-cancel-ride-status">Cancel Ride</button>
+        <button class="btn-primary" id="btn-done-ride" style="margin-top:12px;">Done</button>
+      </section>
+
+    </div>
+  </aside>
+
+</div><!-- #app -->
+
+
+<!-- ==============================================
+     MODALS
+     ============================================== -->
+
+<!-- Budget Modal -->
+<div class="modal-overlay" id="budget-modal">
+  <div class="modal-content">
+    <h2 class="budget-title">Set Your Budget</h2>
+    <p class="budget-subtitle">We will rank the best rides tailored to your budget.</p>
+    <div class="budget-input-wrap">
+      <span class="budget-currency">₹</span>
+      <input type="number" class="budget-input" id="budget-input" placeholder="0">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="budget-skip" style="flex:1">Skip</button>
+      <button class="btn-primary" id="budget-confirm" style="flex:2; margin-bottom:0">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Pickup Modal -->
+<div class="modal-overlay" id="confirmpickup-modal">
+  <div class="modal-content">
+    <h2 class="budget-title" style="font-size:24px; margin-bottom: 24px;">Confirm Ride</h2>
+    <div style="font-size:16px; font-weight: 600; margin-bottom: 8px; color: var(--text-secondary);" id="confirm-platform-name"></div>
+    <div style="font-size:32px; font-weight: 800; color: var(--text-primary); margin-bottom: 24px; letter-spacing: -1px;" id="confirm-price"></div>
+    
+    <div class="confirm-locations">
+      <div class="confirm-loc-row">
+        <div class="loc-dot pickup"></div>
+        <div class="loc-text" id="confirm-pickup-text"></div>
+      </div>
+      <div class="loc-line"></div>
+      <div class="confirm-loc-row">
+        <div class="loc-dot drop"></div>
+        <div class="loc-text" id="confirm-dropoff-text"></div>
+      </div>
+    </div>
+
+    <div class="modal-actions" style="margin-top: 32px;">
+      <button class="btn-secondary" id="confirm-cancel" style="flex:1">Cancel</button>
+      <button class="btn-primary" id="confirm-submit" style="flex:2; margin-bottom:0">Book Ride</button>
+    </div>
+  </div>
+</div>
+
+<!-- Finding Captain Dialog -->
+<div class="modal-overlay" id="captain-dialog">
+  <div class="modal-content" style="text-align: center; max-width: 320px;">
+    <div class="radar-container">
+      <div class="radar-ring"></div>
+      <div class="radar-ring" style="animation-delay: 0.5s;"></div>
+      <div class="radar-ring" style="animation-delay: 1s;"></div>
+      <div class="radar-center"><span class="material-icons">search</span></div>
+    </div>
+    <h2 style="font-size:20px; font-weight: 700; margin-bottom:8px;">Finding your Captain...</h2>
+    <p style="font-size:14px; color:var(--text-secondary);">Connecting you to the nearest driver</p>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="app.js?v=3"></script>
+
+</body>
+</html>
